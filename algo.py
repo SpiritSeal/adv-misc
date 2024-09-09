@@ -1,29 +1,34 @@
 
-
 def layersort (layers: list[tuple[float]]) -> list[list[tuple[float]]]:
     '''
     layers is list of size 2 tuples of floats
     first element is the start of the layer, second is the end
-    sorting prio is that layers with greatest length are first
-    if multiple layers are non-overlapping, move them into the same group
     '''
-    # sort by length
-    layers = sorted(layers, key=lambda x: x[1] - x[0], reverse=True)
-    # sort by start time
-    layers = sorted(layers, key=lambda x: x[0])
-    # group layers
+    layers = sorted(layers, key=lambda x: (x[0], -x[1]))
     groups = []
+    maxlens = {}
     for layer in layers:
         added = False
-        for group in groups:
+        for idx, group in enumerate(groups):
             if group[-1][1] < layer[0]:
                 group.append(layer)
+                maxlens[idx] = max(layer[1] - layer[0], maxlens[idx])
                 added = True
                 break
         if not added:
             groups.append([layer])
-    return groups
+            maxlens[len(groups) - 1] = layer[1] - layer[0]
+    # print(groups)
+    # print(maxlens)
 
+    group_order = sorted(range(len(groups)), key=lambda x: -maxlens[x])
+    # print(group_order)
+
+    out_groups = []
+    for i in group_order:
+        out_groups.append(groups[i])
+
+    return out_groups
 
 
 def test():
@@ -31,7 +36,7 @@ def test():
         (10, 30),
         (21, 31),
         (14, 20),
-        (19, 22),
+        (19, 30),
         (35, 36)
     ]
 
